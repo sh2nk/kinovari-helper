@@ -58,7 +58,7 @@ type Sys struct {
 
 type WeatherCurrentData struct {
 	Coords     Coords        `json:"coord"`
-	Weather    WeatherInfo   `json:"weather"`
+	Weather    []WeatherInfo `json:"weather"`
 	Base       string        `json:"base"`
 	Main       Main          `json:"main"`
 	Visibility int           `json:"visibility"`
@@ -88,7 +88,7 @@ type City struct {
 type WeatherItem struct {
 	DT         int           `json:"dt"`
 	Main       Main          `json:"main"`
-	Weather    WeatherInfo   `json:"weather"`
+	Weather    []WeatherInfo `json:"weather"`
 	Clouds     Clouds        `json:"clouds"`
 	Wind       Wind          `json:"wind"`
 	Visibility int           `json:"visibility"`

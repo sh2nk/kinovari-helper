@@ -11,25 +11,29 @@ import (
 
 // Sends weather forecast
 func Weather(ctx context.Context, obj events.MessageNewObject, args []string) (string, error) {
-	req := Request{
-		City:  args[1],
-		AppID: WeatherToken,
-		Units: "metric",
-		Lang:  "ru",
-	}
+	if len(args) > 0 {
+		req := Request{
+			City:  args[0],
+			AppID: WeatherToken,
+			Units: "metric",
+			Lang:  "ru",
+		}
 
-	resp, err := http.Get(req.MakeWeather())
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
+		resp, err := http.Get(req.MakeWeather())
+		if err != nil {
+			return "", err
+		}
+		defer resp.Body.Close()
 
-	var data WeatherCurrentData
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return "", err
-	}
+		var data WeatherCurrentData
+		if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+			return "", err
+		}
 
-	return fmt.Sprintf("Ответ сервера:\n%v", data), nil
+		return fmt.Sprintf("Ответ сервера:\n%#v", data), nil
+	} else {
+		return "Не указан населенный пункт", nil
+	}
 }
 
 // Sends user privilegies info
