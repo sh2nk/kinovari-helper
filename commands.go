@@ -1,10 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
+	"text/template"
 
 	"github.com/SevereCloud/vksdk/v2/events"
 )
@@ -30,7 +31,17 @@ func Weather(ctx context.Context, obj events.MessageNewObject, args []string) (s
 			return "", err
 		}
 
-		return fmt.Sprintf("Ответ сервера:\n%#v", data), nil
+		t, err := template.ParseFiles("templates/weatherCurrent.txt")
+		if err != nil {
+			return "", err
+		}
+
+		var buf bytes.Buffer
+		if err = t.Execute(&buf, data); err != nil {
+			return "", err
+		}
+
+		return buf.String(), nil
 	} else {
 		return "Не указан населенный пункт", nil
 	}

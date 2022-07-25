@@ -1,6 +1,9 @@
 package main
 
-import "net/url"
+import (
+	"fmt"
+	"net/url"
+)
 
 var (
 	WeatherEndpoint  = "https://api.openweathermap.org/data/2.5/weather?"
@@ -133,4 +136,51 @@ func (w Request) MakeWeather() string {
 
 func (w Request) MakeForecast() string {
 	return ForecastEndpoint + w.create()
+}
+
+func (w WeatherCurrentData) GetIcon() string {
+	switch w.Weather[0].Icon {
+	case "01d":
+		return "☀️"
+	case "01n":
+		return "🌚"
+	case "02d", "02n":
+		return "🌤️"
+	case "03d", "03n":
+		return "☁️"
+	case "04d", "04n":
+		return "🌥️"
+	case "09d", "09n":
+		return "🌧️"
+	case "10d", "10n":
+		return "🌦️"
+	case "11d", "11n":
+		return "⛈️"
+	case "13d", "13n":
+		return "❄️"
+	case "50d", "50n":
+		return "🌫️"
+	default:
+		return "☀️"
+	}
+}
+
+func (w WeatherCurrentData) GetTemp() string {
+	if w.Main.Temp >= 0 {
+		return fmt.Sprintf("+%.1f°", w.Main.Temp)
+	} else {
+		return fmt.Sprintf("-%.1f°", w.Main.Temp)
+	}
+}
+
+func (w WeatherCurrentData) GetFeelsLike() string {
+	if w.Main.FeelsLike >= 0 {
+		return fmt.Sprintf("+%.1f°", w.Main.FeelsLike)
+	} else {
+		return fmt.Sprintf("-%.1f°", w.Main.FeelsLike)
+	}
+}
+
+func (w WeatherCurrentData) GetPressure() float32 {
+	return float32(w.Main.Pressure) * 0.750062
 }
