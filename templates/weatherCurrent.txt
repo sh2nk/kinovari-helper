@@ -13,7 +13,7 @@
 Сегодня не было осадков.
 {{ end }}
 
-Ветер: ➡ {{ .Wind.Speed }} м/с, влажность: {{ .Main.Humidity }}%
+Ветер: {{ .GetWindDirection }} {{ .Wind.Speed }} м/с, влажность: {{ .Main.Humidity }}%
 Атмосферное давление: {{ .GetPressure | printf "%.1f"}} мм.рт.ст.
 Видимость: {{ .Visibility }} м
 Облачность: {{ .Clouds.All }}%

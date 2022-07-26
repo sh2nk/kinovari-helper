@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -33,4 +34,20 @@ func isConverstationAdmin(peerID int, fromID int) bool {
 		}
 	}
 	return false
+}
+
+func getTempString(t float32) string {
+	if t >= 0 {
+		return fmt.Sprintf("+%.1f°", t)
+	} else {
+		return fmt.Sprintf("-%.1f°", t)
+	}
+}
+
+func makeWarningMessage(msg string) string {
+	return fmt.Sprintf("⚠️ %s", msg)
+}
+
+func makeErrorMessage(msg string) string {
+	return fmt.Sprintf("⛔ %s", msg)
 }
