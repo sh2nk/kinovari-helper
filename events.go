@@ -57,7 +57,8 @@ func MakeResponse(fn Command) Command {
 		// Building response
 		b := params.NewMessagesSendBuilder()
 		b.Message(res)
-		b.RandomID(0)
+		b.RandomID(int(randomInt32()))
+		b.ReplyTo(obj.Message.FromID)
 		b.PeerID(obj.Message.PeerID)
 
 		// Sending response message

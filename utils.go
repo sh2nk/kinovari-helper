@@ -3,10 +3,19 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
+	"math/rand"
 	"os"
+	"time"
 
 	"github.com/SevereCloud/vksdk/v2/api/params"
 )
+
+// Generates some pseudorandom int32 value
+func randomInt32() int32 {
+	rand.Seed(time.Now().UnixNano())
+	return rand.Int31n(math.MaxInt32)
+}
 
 // Gets some values from env vars, otherwise returns fallback value
 func getEnv(key, fallback string) string {
