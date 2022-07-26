@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"net/url"
 )
 
@@ -100,13 +101,13 @@ type WeatherCurrentData struct {
 	Timezone   int           `json:"timezone"`
 	ID         int           `json:"id"`
 	Name       string        `json:"name"`
-	Cod        int           `json:"cod"`
+	Cod        json.Number   `json:"cod"`
 	Message    string        `json:"message"`
 }
 
 // Should be returned by forecast request
 type WeatherForecast struct {
-	Cod     int           `json:"cod"`
+	Cod     string        `json:"cod"`
 	Message int           `json:"message"`
 	Count   int           `json:"cnt"`
 	List    []WeatherItem `json:"list"`
@@ -188,7 +189,7 @@ func (w WeatherCurrentData) GetPressure() float32 {
 
 // Return wind direction icon based on wind azimuth
 func (w WeatherCurrentData) GetWindDirection() string {
-	switch w.Wind.Direction / 8 {
+	switch w.Wind.Direction / 45 {
 	case 0:
 		return "⬆️"
 	case 1:

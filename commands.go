@@ -38,9 +38,9 @@ func Weather(ctx context.Context, obj events.MessageNewObject, args []string) (s
 
 		// Response status codes handler
 		switch data.Cod {
-		case 404:
+		case "404":
 			return makeWarningMessage("Географический объект не найден."), nil
-		case 429:
+		case "429":
 			return makeWarningMessage("Превышен лимит использования API!\n&#12288;Повторите попытку позже!"), nil
 		default:
 			// Parse message template

@@ -6,7 +6,7 @@
 {{ if .Rain.OneHour }}
 За последний час выпало {{ .Rain.OneHour }} мм дождя
 {{ if .Rain.ThreeHours }}{{ .Rain.ThreeHours }} мм за последние 3 часа.{{ end }}
-{{ else if .Snow.OneHour .Snow.ThreeHours }}
+{{ else if .Snow.OneHour }}
 За последний час выпало {{ .Rain.OneHour }} мм снега
 {{ if .Snow.ThreeHours }}{{ .Snow.ThreeHours }} мм за последние 3 часа.{{ end }}
 {{ else }}
