@@ -8,11 +8,13 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/SevereCloud/vksdk/v2/api/params"
 	"github.com/SevereCloud/vksdk/v2/events"
 )
 
 // Sends weather forecast
-func Weather(ctx context.Context, obj events.MessageNewObject, args []string) (string, error) {
+func Weather(ctx context.Context, obj events.MessageNewObject, args []string) (*params.MessagesSendBuilder, error) {
+	b := params.NewMessagesSendBuilder()
 	// Check user input and throw a error if zero args is passed
 	if len(args) > 0 {
 		// Create weather API request
@@ -26,46 +28,57 @@ func Weather(ctx context.Context, obj events.MessageNewObject, args []string) (s
 		// Sending request
 		resp, err := http.Get(req.MakeWeather())
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		defer resp.Body.Close()
 
 		// Parsing responce data
 		var data WeatherCurrentData
 		if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-			return "", err
+			return nil, err
 		}
 
 		// Response status codes handler
 		switch data.Cod {
 		case "404":
-			return makeWarningMessage("Географический объект не найден."), nil
+			b.Message(makeWarningMessage("Географический объект не найден."))
+			return b, nil
 		case "429":
-			return makeWarningMessage("Превышен лимит использования API!\n&#12288;Повторите попытку позже!"), nil
+			b.Message(makeWarningMessage("Превышен лимит использования API!\n&#12288;Повторите попытку позже!"))
+			return b, nil
 		default:
 			// Parse message template
 			t, err := template.ParseFiles("templates/weatherCurrent.txt")
 			if err != nil {
-				return "", err
+				return nil, err
 			}
 
 			// Render template to buffer
 			var buf bytes.Buffer
 			if err = t.Execute(&buf, data); err != nil {
-				return "", err
+				return nil, err
 			}
-			return buf.String(), nil
+			b.Message(buf.String())
+			return b, nil
 		}
 	} else {
-		return makeErrorMessage("Не указан населенный пункт."), nil
+		b.Message(makeErrorMessage("Не указан населенный пункт."))
+		return b, nil
 	}
 }
 
 // Sends user privilegies info
-func Admin(ctx context.Context, obj events.MessageNewObject, args []string) (string, error) {
+func Admin(ctx context.Context, obj events.MessageNewObject, args []string) (*params.MessagesSendBuilder, error) {
+	b := params.NewMessagesSendBuilder()
 	if isConverstationAdmin(obj.Message.PeerID, obj.Message.FromID) {
-		return "Пользователь админ в чате", nil
+		b.Message("Пользователь админ в чате")
+		return b, nil
 	} else {
-		return "Пользователь простой работяга", nil
+		b.Message("Пользователь простой работяга")
+		return b, nil
 	}
+}
+
+func Thanks(ctx context.Context, obj events.MessageNewObject, args []string) (*params.MessagesSendBuilder, error) {
+	return params.NewMessagesSendBuilder(), nil
 }

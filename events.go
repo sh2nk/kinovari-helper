@@ -38,11 +38,15 @@ func onMessageNew(ctx context.Context, obj events.MessageNewObject) {
 	// Do some actions if right prefix is found
 	switch cmd.Action {
 	case "погода":
-		if _, err := MakeResponse(Weather)(ctx, obj, cmd.Args); err != nil {
+		if _, err := SendMessage(Weather)(ctx, obj, cmd.Args); err != nil {
 			log.Printf("Error occured during 'weather' command call: %v\n", err)
 		}
 	case "админ":
-		if _, err := MakeResponse(Admin)(ctx, obj, cmd.Args); err != nil {
+		if _, err := SendMessage(Admin)(ctx, obj, cmd.Args); err != nil {
+			log.Printf("Error occured during 'admin' command call: %v\n", err)
+		}
+	case "спасибо", "спс", "благодарю", "уважение", "респект", "хорош":
+		if _, err := SendMessage(Thanks)(ctx, obj, cmd.Args); err != nil {
 			log.Printf("Error occured during 'admin' command call: %v\n", err)
 		}
 	}

@@ -9,20 +9,17 @@ import (
 )
 
 // Command - basic command function type, used by response builder
-type Command func(context.Context, events.MessageNewObject, []string) (string, error)
+type Command func(context.Context, events.MessageNewObject, []string) (*params.MessagesSendBuilder, error)
 
 // Response messages builder, wraps the command functions
-func MakeResponse(fn Command) Command {
-	return func(ctx context.Context, obj events.MessageNewObject, args []string) (string, error) {
+func SendMessage(fn Command) Command {
+	return func(ctx context.Context, obj events.MessageNewObject, args []string) (*params.MessagesSendBuilder, error) {
 		// Get result from inner function
-		res, err := fn(ctx, obj, args)
+		b, err := fn(ctx, obj, args)
 		if err != nil {
-			return res, err
+			return nil, err
 		}
 
-		// Building response
-		b := params.NewMessagesSendBuilder()
-		b.Message(res)
 		b.RandomID(int(randomInt32()))
 
 		// Use forward field to reply if message from converstation
@@ -36,7 +33,7 @@ func MakeResponse(fn Command) Command {
 			}
 			bytes, err := json.Marshal(f)
 			if err != nil {
-				return res, err
+				return nil, err
 			}
 			b.Forward(string(bytes))
 		}
@@ -46,9 +43,9 @@ func MakeResponse(fn Command) Command {
 		// Sending response message
 		_, err = VK.MessagesSend(b.Params)
 		if err != nil {
-			return res, err
+			return nil, err
 		}
 
-		return res, nil
+		return b, nil
 	}
 }
