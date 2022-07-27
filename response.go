@@ -11,6 +11,9 @@ import (
 // Command - basic command function type, used by response builder
 type Command func(context.Context, events.MessageNewObject, []string) (*params.MessagesSendBuilder, error)
 
+type Buttons struct {
+}
+
 // Response messages builder, wraps the command functions
 func SendMessage(fn Command) Command {
 	return func(ctx context.Context, obj events.MessageNewObject, args []string) (*params.MessagesSendBuilder, error) {
@@ -21,6 +24,7 @@ func SendMessage(fn Command) Command {
 		}
 
 		b.RandomID(int(randomInt32()))
+		b.PeerID(obj.Message.PeerID)
 
 		// Use forward field to reply if message from converstation
 		if obj.Message.PeerID < 2000000000 {
@@ -38,10 +42,32 @@ func SendMessage(fn Command) Command {
 			b.Forward(string(bytes))
 		}
 
-		b.PeerID(obj.Message.PeerID)
-
 		// Sending response message
 		_, err = VK.MessagesSend(b.Params)
+		if err != nil {
+			return nil, err
+		}
+
+		return b, nil
+	}
+}
+
+func AddPhoto(fn Command, path string) Command {
+	return func(ctx context.Context, obj events.MessageNewObject, args []string) (*params.MessagesSendBuilder, error) {
+		// Get result from inner function
+		b, err := fn(ctx, obj, args)
+		if err != nil {
+			return nil, err
+		}
+
+		return b, nil
+	}
+}
+
+func AddButtons(fn Command, btn string) Command {
+	return func(ctx context.Context, obj events.MessageNewObject, args []string) (*params.MessagesSendBuilder, error) {
+		// Get result from inner function
+		b, err := fn(ctx, obj, args)
 		if err != nil {
 			return nil, err
 		}
