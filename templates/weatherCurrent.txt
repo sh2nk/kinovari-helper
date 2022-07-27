@@ -10,7 +10,7 @@
 За последний час выпало {{ .Rain.OneHour }} мм снега
 {{ if .Snow.ThreeHours }}{{ .Snow.ThreeHours }} мм за последние 3 часа.{{ end }}
 {{ else }}
-Сегодня не было осадков.
+За последние 3 часа осадков не выпало.
 {{ end }}
 
 Ветер: {{ .GetWindDirection }} {{ .Wind.Speed }} м/с, влажность: {{ .Main.Humidity }}%

@@ -5,7 +5,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/SevereCloud/vksdk/v2/api/params"
 	"github.com/SevereCloud/vksdk/v2/events"
 )
 
@@ -15,8 +14,12 @@ type ParsedCommand struct {
 	Args   []string
 }
 
-// Command - basic command function type, used by response builder
-type Command func(context.Context, events.MessageNewObject, []string) (string, error)
+type Forward struct {
+	OwnerID                 int   `json:"owner_id"`
+	PeerID                  int   `json:"peer_id"`
+	ConverstationMessageIDs []int `json:"conversation_message_ids"`
+	IsReply                 bool  `json:"is_reply"`
+}
 
 // New message event handler
 func onMessageNew(ctx context.Context, obj events.MessageNewObject) {
@@ -42,31 +45,5 @@ func onMessageNew(ctx context.Context, obj events.MessageNewObject) {
 		if _, err := MakeResponse(Admin)(ctx, obj, cmd.Args); err != nil {
 			log.Printf("Error occured during 'admin' command call: %v\n", err)
 		}
-	}
-}
-
-// Response messages builder, wraps the command functions
-func MakeResponse(fn Command) Command {
-	return func(ctx context.Context, obj events.MessageNewObject, args []string) (string, error) {
-		// Get result from inner function
-		res, err := fn(ctx, obj, args)
-		if err != nil {
-			return res, err
-		}
-
-		// Building response
-		b := params.NewMessagesSendBuilder()
-		b.Message(res)
-		b.RandomID(int(randomInt32()))
-		b.ReplyTo(obj.Message.FromID)
-		b.PeerID(obj.Message.PeerID)
-
-		// Sending response message
-		_, err = VK.MessagesSend(b.Params)
-		if err != nil {
-			return res, err
-		}
-
-		return res, nil
 	}
 }
