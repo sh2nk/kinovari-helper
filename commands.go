@@ -13,8 +13,10 @@ import (
 )
 
 // Sends weather forecast
-func Weather(ctx context.Context, obj events.MessageNewObject, args []string) (*params.MessagesSendBuilder, error) {
-	b := params.NewMessagesSendBuilder()
+func Weather(ctx context.Context, obj events.MessageNewObject, args []string) (*Message, error) {
+	m := new(Message)
+	m.Builder = params.NewMessagesSendBuilder()
+
 	// Check user input and throw a error if zero args is passed
 	if len(args) > 0 {
 		// Create weather API request
@@ -41,11 +43,11 @@ func Weather(ctx context.Context, obj events.MessageNewObject, args []string) (*
 		// Response status codes handler
 		switch data.Cod {
 		case "404":
-			b.Message(makeWarningMessage("Географический объект не найден."))
-			return b, nil
+			m.Builder.Message(makeWarningMessage("Географический объект не найден."))
+			return m, nil
 		case "429":
-			b.Message(makeWarningMessage("Превышен лимит использования API!\n&#12288;Повторите попытку позже!"))
-			return b, nil
+			m.Builder.Message(makeWarningMessage("Превышен лимит использования API!\n&#12288;Повторите попытку позже!"))
+			return m, nil
 		default:
 			// Parse message template
 			t, err := template.ParseFiles("templates/weatherCurrent.txt")
@@ -58,31 +60,29 @@ func Weather(ctx context.Context, obj events.MessageNewObject, args []string) (*
 			if err = t.Execute(&buf, data); err != nil {
 				return nil, err
 			}
-			b.Message(buf.String())
-			return b, nil
+			m.Builder.Message(buf.String())
+			return m, nil
 		}
 	} else {
-		b.Message(makeErrorMessage("Не указан населенный пункт."))
-		return b, nil
+		m.Builder.Message(makeErrorMessage("Не указан населенный пункт."))
+		return m, nil
 	}
 }
 
 // Sends user privilegies info
-func Admin(ctx context.Context, obj events.MessageNewObject, args []string) (*params.MessagesSendBuilder, error) {
-	b := params.NewMessagesSendBuilder()
+func Admin(ctx context.Context, obj events.MessageNewObject, args []string) (*Message, error) {
+	m := new(Message)
+	m.Builder = params.NewMessagesSendBuilder()
+
 	if isConverstationAdmin(obj.Message.PeerID, obj.Message.FromID) {
-		b.Message("Пользователь админ в чате")
-		return b, nil
+		m.Builder.Message("Пользователь админ в чате")
+		return m, nil
 	} else {
-		b.Message("Пользователь простой работяга")
-		return b, nil
+		m.Builder.Message("Пользователь простой работяга")
+		return m, nil
 	}
 }
 
-func Thanks(ctx context.Context, obj events.MessageNewObject, args []string) (*params.MessagesSendBuilder, error) {
-	return params.NewMessagesSendBuilder(), nil
-}
-
-func TestPhoto(ctx context.Context, obj events.MessageNewObject, args []string) (*params.MessagesSendBuilder, error) {
-	return params.NewMessagesSendBuilder(), nil
+func Empty(ctx context.Context, obj events.MessageNewObject, args []string) (*Message, error) {
+	return &Message{Builder: params.NewMessagesSendBuilder()}, nil
 }

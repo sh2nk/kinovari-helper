@@ -14,7 +14,11 @@ import (
 )
 
 // Command - basic command function type, used by response builder
-type Command func(context.Context, events.MessageNewObject, []string) (*params.MessagesSendBuilder, error)
+type Command func(context.Context, events.MessageNewObject, []string) (*Message, error)
+
+type Message struct {
+	Builder *params.MessagesSendBuilder
+}
 
 // Photo - uploaded image info
 type Photo struct {
@@ -28,19 +32,36 @@ type Buttons struct {
 
 // Response messages builder, wraps the command functions
 func SendMessage(fn Command) Command {
-	return func(ctx context.Context, obj events.MessageNewObject, args []string) (*params.MessagesSendBuilder, error) {
+	return func(ctx context.Context, obj events.MessageNewObject, args []string) (*Message, error) {
 		// Get result from inner function
-		b, err := fn(ctx, obj, args)
+		m, err := fn(ctx, obj, args)
 		if err != nil {
 			return nil, err
 		}
 
-		b.RandomID(int(randomInt32()))
-		b.PeerID(obj.Message.PeerID)
+		m.Builder.RandomID(int(randomInt32()))
+		m.Builder.PeerID(obj.Message.PeerID)
+
+		// Sending response message
+		if _, err = VK.MessagesSend(m.Builder.Params); err != nil {
+			return nil, err
+		}
+
+		return m, nil
+	}
+}
+
+func AddReply(fn Command) Command {
+	return func(ctx context.Context, obj events.MessageNewObject, args []string) (*Message, error) {
+		// Get result from inner function
+		m, err := fn(ctx, obj, args)
+		if err != nil {
+			return nil, err
+		}
 
 		// Use forward field to reply if message from converstation
 		if obj.Message.PeerID < 2000000000 {
-			b.ReplyTo(obj.Message.ID)
+			m.Builder.ReplyTo(obj.Message.ID)
 		} else {
 			f := Forward{
 				PeerID:                  obj.Message.PeerID,
@@ -51,22 +72,45 @@ func SendMessage(fn Command) Command {
 			if err != nil {
 				return nil, err
 			}
-			b.Forward(string(bytes))
+			m.Builder.Forward(string(bytes))
 		}
 
-		// Sending response message
-		if _, err = VK.MessagesSend(b.Params); err != nil {
+		return m, nil
+	}
+}
+
+func AddReplyToSelected(fn Command) Command {
+	return func(ctx context.Context, obj events.MessageNewObject, args []string) (*Message, error) {
+		// Get result from inner function
+		m, err := fn(ctx, obj, args)
+		if err != nil {
 			return nil, err
 		}
 
-		return b, nil
+		// Use forward field to reply if message from converstation
+		if obj.Message.PeerID < 2000000000 {
+			m.Builder.ReplyTo(obj.Message.ReplyMessage.ID)
+		} else {
+			f := Forward{
+				PeerID:                  obj.Message.PeerID,
+				ConverstationMessageIDs: []int{obj.Message.ReplyMessage.ConversationMessageID},
+				IsReply:                 true,
+			}
+			bytes, err := json.Marshal(f)
+			if err != nil {
+				return nil, err
+			}
+			m.Builder.Forward(string(bytes))
+		}
+
+		return m, nil
 	}
 }
 
 func AddPhoto(fn Command, path string) Command {
-	return func(ctx context.Context, obj events.MessageNewObject, args []string) (*params.MessagesSendBuilder, error) {
+	return func(ctx context.Context, obj events.MessageNewObject, args []string) (*Message, error) {
 		// Get result from inner function
-		b, err := fn(ctx, obj, args)
+		m, err := fn(ctx, obj, args)
 		if err != nil {
 			return nil, err
 		}
@@ -124,20 +168,20 @@ func AddPhoto(fn Command, path string) Command {
 		}
 
 		// Attach photo to message
-		b.Attachment(sresp)
+		m.Builder.Attachment(sresp)
 
-		return b, nil
+		return m, nil
 	}
 }
 
 func AddButtons(fn Command, btn Buttons) Command {
-	return func(ctx context.Context, obj events.MessageNewObject, args []string) (*params.MessagesSendBuilder, error) {
+	return func(ctx context.Context, obj events.MessageNewObject, args []string) (*Message, error) {
 		// Get result from inner function
-		b, err := fn(ctx, obj, args)
+		m, err := fn(ctx, obj, args)
 		if err != nil {
 			return nil, err
 		}
 
-		return b, nil
+		return m, nil
 	}
 }

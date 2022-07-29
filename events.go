@@ -38,16 +38,22 @@ func onMessageNew(ctx context.Context, obj events.MessageNewObject) {
 	// Do some actions if right prefix is found
 	switch cmd.Action {
 	case "погода":
-		if _, err := SendMessage(Weather)(ctx, obj, cmd.Args); err != nil {
+		if _, err := SendMessage(AddReply(Weather))(ctx, obj, cmd.Args); err != nil {
 			log.Printf("Error occured during 'weather' command call: %v\n", err)
 		}
 	case "админ":
-		if _, err := SendMessage(Admin)(ctx, obj, cmd.Args); err != nil {
+		if _, err := SendMessage(AddReply(Admin))(ctx, obj, cmd.Args); err != nil {
 			log.Printf("Error occured during 'admin' command call: %v\n", err)
 		}
-	case "спасибо", "спс", "благодарю", "уважение", "респект", "хорош":
-		if isConverstationAdmin(obj.Message.PeerID, obj.Message.FromID) {
-			if _, err := SendMessage(AddPhoto(Thanks, "img/thanks.jpg"))(ctx, obj, cmd.Args); err != nil {
+	case "спасибо", "спс", "благодарю", "уважение", "респект", "хорош", "харош", "+":
+		if obj.Message.ReplyMessage != nil {
+			if _, err := SendMessage(AddReplyToSelected(AddPhoto(Empty, "img/thanks.jpg")))(ctx, obj, cmd.Args); err != nil {
+				log.Printf("Error occured during 'thanks' command call: %v\n", err)
+			}
+		}
+	case "фу", "гавно", "говно", "дерьмо", "кал", "удали", "бан", "плох", "паршив", "подводишь", "расстраиваешь":
+		if obj.Message.ReplyMessage != nil {
+			if _, err := SendMessage(AddReplyToSelected(AddPhoto(Empty, "img/oops.jpg")))(ctx, obj, cmd.Args); err != nil {
 				log.Printf("Error occured during 'thanks' command call: %v\n", err)
 			}
 		}
