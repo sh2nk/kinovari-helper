@@ -82,3 +82,7 @@ func Admin(ctx context.Context, obj events.MessageNewObject, args []string) (*pa
 func Thanks(ctx context.Context, obj events.MessageNewObject, args []string) (*params.MessagesSendBuilder, error) {
 	return params.NewMessagesSendBuilder(), nil
 }
+
+func TestPhoto(ctx context.Context, obj events.MessageNewObject, args []string) (*params.MessagesSendBuilder, error) {
+	return params.NewMessagesSendBuilder(), nil
+}

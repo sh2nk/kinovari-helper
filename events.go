@@ -46,8 +46,10 @@ func onMessageNew(ctx context.Context, obj events.MessageNewObject) {
 			log.Printf("Error occured during 'admin' command call: %v\n", err)
 		}
 	case "спасибо", "спс", "благодарю", "уважение", "респект", "хорош":
-		if _, err := SendMessage(Thanks)(ctx, obj, cmd.Args); err != nil {
-			log.Printf("Error occured during 'admin' command call: %v\n", err)
+		if isConverstationAdmin(obj.Message.PeerID, obj.Message.FromID) {
+			if _, err := SendMessage(AddPhoto(Thanks, "img/thanks.jpg"))(ctx, obj, cmd.Args); err != nil {
+				log.Printf("Error occured during 'thanks' command call: %v\n", err)
+			}
 		}
 	}
 }
