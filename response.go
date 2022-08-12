@@ -1,12 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
-	"mime/multipart"
-	"net/http"
 	"os"
 
 	"github.com/SevereCloud/vksdk/v2/api/params"
@@ -25,9 +21,6 @@ type Photo struct {
 	Server int    `json:"server"`
 	Photo  string `json:"photo"`
 	Hash   string `json:"hash"`
-}
-
-type Buttons struct {
 }
 
 // Response messages builder, wraps the command functions
@@ -120,61 +113,62 @@ func AddPhoto(fn Command, path string) Command {
 		if err != nil {
 			return nil, err
 		}
-		fdata, err := ioutil.ReadAll(file)
-		if err != nil {
-			return nil, err
-		}
-		file.Close()
+		defer file.Close()
 
-		// Get upload server URL
-		pb := params.NewPhotosGetMessagesUploadServerBuilder()
-		pb.PeerID(obj.Message.PeerID)
-		uresp, err := VK.PhotosGetMessagesUploadServer(pb.Params)
+		photo, err := VK.UploadMessagesPhoto(obj.Message.PeerID, file)
 		if err != nil {
 			return nil, err
 		}
 
-		// Create multipart
-		var buf bytes.Buffer
-		writer := multipart.NewWriter(&buf)
-		part, err := writer.CreateFormFile("photo", file.Name())
-		if err != nil {
-			return nil, err
-		}
-		part.Write(fdata)
-		writer.Close()
+		// // Get upload server URL
+		// pb := params.NewPhotosGetMessagesUploadServerBuilder()
+		// pb.PeerID(obj.Message.PeerID)
+		// uresp, err := VK.PhotosGetMessagesUploadServer(pb.Params)
+		// if err != nil {
+		// 	return nil, err
+		// }
 
-		// Upload image
-		presp, err := http.Post(uresp.UploadURL, writer.FormDataContentType(), &buf)
-		if err != nil {
-			return nil, err
-		}
-		defer presp.Body.Close()
+		// // Create multipart
+		// var buf bytes.Buffer
+		// writer := multipart.NewWriter(&buf)
+		// part, err := writer.CreateFormFile("photo", file.Name())
+		// if err != nil {
+		// 	return nil, err
+		// }
+		// part.Write(fdata)
+		// writer.Close()
 
-		// Parse uploaded photo data
-		var pdata Photo
-		if err := json.NewDecoder(presp.Body).Decode(&pdata); err != nil {
-			return nil, err
-		}
+		// // Upload image
+		// presp, err := http.Post(uresp.UploadURL, writer.FormDataContentType(), &buf)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		// defer presp.Body.Close()
 
-		// Make image save request and get attachment data
-		spb := params.NewPhotosSaveMessagesPhotoBuilder()
-		spb.Server(pdata.Server)
-		spb.Photo(pdata.Photo)
-		spb.Hash(pdata.Hash)
-		sresp, err := VK.PhotosSaveMessagesPhoto(spb.Params)
-		if err != nil {
-			return nil, err
-		}
+		// // Parse uploaded photo data
+		// var pdata Photo
+		// if err := json.NewDecoder(presp.Body).Decode(&pdata); err != nil {
+		// 	return nil, err
+		// }
+
+		// // Make image save request and get attachment data
+		// spb := params.NewPhotosSaveMessagesPhotoBuilder()
+		// spb.Server(pdata.Server)
+		// spb.Photo(pdata.Photo)
+		// spb.Hash(pdata.Hash)
+		// sresp, err := VK.PhotosSaveMessagesPhoto(spb.Params)
+		// if err != nil {
+		// 	return nil, err
+		// }
 
 		// Attach photo to message
-		m.Builder.Attachment(sresp)
+		m.Builder.Attachment(photo)
 
 		return m, nil
 	}
 }
 
-func AddButtons(fn Command, btn Buttons) Command {
+func AddKeyboard(fn Command, kbd Keyboard) Command {
 	return func(ctx context.Context, obj events.MessageNewObject, args []string) (*Message, error) {
 		// Get result from inner function
 		m, err := fn(ctx, obj, args)

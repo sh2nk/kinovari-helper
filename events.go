@@ -36,6 +36,7 @@ func onMessageNew(ctx context.Context, obj events.MessageNewObject) {
 	}
 
 	// Do some actions if right prefix is found
+	// TODO: export command keystrings to separate place
 	switch cmd.Action {
 	case "погода":
 		if _, err := SendMessage(AddReply(Weather))(ctx, obj, cmd.Args); err != nil {
@@ -45,16 +46,16 @@ func onMessageNew(ctx context.Context, obj events.MessageNewObject) {
 		if _, err := SendMessage(AddReply(Admin))(ctx, obj, cmd.Args); err != nil {
 			log.Printf("Error occured during 'admin' command call: %v\n", err)
 		}
-	case "спасибо", "спс", "благодарю", "уважение", "респект", "хорош", "харош", "+":
+	case "спасибо", "спс", "благодарю", "уважение", "респект", "хорош", "харош", "красава", "лучший", "лучшая", "хороша", "+":
 		if obj.Message.ReplyMessage != nil {
 			if _, err := SendMessage(AddReplyToSelected(AddPhoto(Empty, "img/thanks.jpg")))(ctx, obj, cmd.Args); err != nil {
 				log.Printf("Error occured during 'thanks' command call: %v\n", err)
 			}
 		}
-	case "фу", "гавно", "говно", "дерьмо", "кал", "удали", "бан", "плох", "паршив", "подводишь", "расстраиваешь":
+	case "фу", "гавно", "говно", "дерьмо", "кал", "удали", "бан", "плох", "паршив", "паршива", "подводишь", "расстраиваешь", "опозорился", "опозорилась", "опростоволосился", "опростоволосилась":
 		if obj.Message.ReplyMessage != nil {
 			if _, err := SendMessage(AddReplyToSelected(AddPhoto(Empty, "img/oops.jpg")))(ctx, obj, cmd.Args); err != nil {
-				log.Printf("Error occured during 'thanks' command call: %v\n", err)
+				log.Printf("Error occured during 'oops' command call: %v\n", err)
 			}
 		}
 	}
