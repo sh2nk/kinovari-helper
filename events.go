@@ -39,24 +39,94 @@ func onMessageNew(ctx context.Context, obj events.MessageNewObject) {
 	// TODO: export command keystrings to separate place
 	switch cmd.Action {
 	case "погода":
-		if _, err := SendMessage(AddReply(Weather))(ctx, obj, cmd.Args); err != nil {
+		var c Command
+		c = Weather
+		c = AddReply(c)
+		c = SendMessage(c)
+
+		if _, err := c(ctx, obj, cmd.Args); err != nil {
 			log.Printf("Error occured during 'weather' command call: %v\n", err)
 		}
+
 	case "админ":
-		if _, err := SendMessage(AddReply(Admin))(ctx, obj, cmd.Args); err != nil {
+		var c Command
+		c = Admin
+		c = AddReply(c)
+		c = SendMessage(c)
+
+		if _, err := c(ctx, obj, cmd.Args); err != nil {
 			log.Printf("Error occured during 'admin' command call: %v\n", err)
 		}
+
 	case "спасибо", "спс", "благодарю", "уважение", "респект", "хорош", "харош", "красава", "лучший", "лучшая", "хороша", "+":
 		if obj.Message.ReplyMessage != nil {
-			if _, err := SendMessage(AddReplyToSelected(AddPhoto(Empty, "img/thanks.jpg")))(ctx, obj, cmd.Args); err != nil {
+			var c Command
+			c = AddPhoto(BasicCommand, "img/thanks.jpg")
+			c = AddReplyToSelected(c)
+			c = SendMessage(c)
+
+			if _, err := c(ctx, obj, cmd.Args); err != nil {
 				log.Printf("Error occured during 'thanks' command call: %v\n", err)
 			}
 		}
+
 	case "фу", "гавно", "говно", "дерьмо", "кал", "удали", "бан", "плох", "паршив", "паршива", "подводишь", "расстраиваешь", "опозорился", "опозорилась", "опростоволосился", "опростоволосилась":
 		if obj.Message.ReplyMessage != nil {
-			if _, err := SendMessage(AddReplyToSelected(AddPhoto(Empty, "img/oops.jpg")))(ctx, obj, cmd.Args); err != nil {
+			var c Command
+			c = AddPhoto(BasicCommand, "img/oops.jpg")
+			c = AddReplyToSelected(c)
+			c = SendMessage(c)
+
+			if _, err := c(ctx, obj, cmd.Args); err != nil {
 				log.Printf("Error occured during 'oops' command call: %v\n", err)
 			}
+		}
+
+	//TODO: make proper buttons constructor
+	case "кнопки":
+		kbd := &Keyboard{
+			OneTime: false,
+			Inline:  true,
+			Buttons: [][]Button{
+				{
+					Button{
+						Action: Action{
+							Type:    "callback",
+							Payload: "",
+							Label:   "Кнопка 1",
+						},
+						Color: "positive",
+					},
+					Button{
+						Action: Action{
+							Type:    "callback",
+							Payload: "",
+							Label:   "Кнопка 2",
+						},
+						Color: "negative",
+					},
+				},
+				{
+					Button{
+						Action: Action{
+							Type:    "callback",
+							Payload: "",
+							Label:   "Кнопка 3",
+						},
+						Color: "primary",
+					},
+				},
+			},
+		}
+
+		var c Command
+
+		c = AddText(BasicCommand, "Тест кнопок")
+		с = AddKeyboard(c, kbd)
+		c = SendMessage(c)
+
+		if _, err := c(ctx, obj, cmd.Args); err != nil {
+			log.Printf("Error occured during 'buttons' command call: %v\n", err)
 		}
 	}
 }

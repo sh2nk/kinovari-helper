@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 	"text/template"
@@ -42,6 +43,8 @@ func Weather(ctx context.Context, obj events.MessageNewObject, args []string) (*
 
 		// Response status codes handler
 		switch data.Cod {
+		case "401":
+			return nil, errors.New("invalid weather API key")
 		case "404":
 			m.Builder.Message(makeWarningMessage("Географический объект не найден."))
 			return m, nil
@@ -83,6 +86,6 @@ func Admin(ctx context.Context, obj events.MessageNewObject, args []string) (*Me
 	}
 }
 
-func Empty(ctx context.Context, obj events.MessageNewObject, args []string) (*Message, error) {
+func BasicCommand(ctx context.Context, obj events.MessageNewObject, args []string) (*Message, error) {
 	return &Message{Builder: params.NewMessagesSendBuilder()}, nil
 }
