@@ -45,7 +45,8 @@ func main() {
 	}
 
 	// Registering event handlers
-	lp.MessageNew(onMessageNew) // New message event
+	lp.MessageNew(OnMessageNew) // New message
+	lp.MessageEvent(OnMessageEvent)
 
 	// Running Bots Long Poll
 	log.Println("Starting longpoll...\nBot in now online!")

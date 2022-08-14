@@ -10,11 +10,10 @@ import (
 	"text/template"
 
 	"github.com/SevereCloud/vksdk/v2/api/params"
-	"github.com/SevereCloud/vksdk/v2/events"
 )
 
 // Sends weather forecast
-func Weather(ctx context.Context, obj events.MessageNewObject, args []string) (*Message, error) {
+func Weather(ctx context.Context, obj MessageObject, args []string) (*Message, error) {
 	m := new(Message)
 	m.Builder = params.NewMessagesSendBuilder()
 
@@ -73,7 +72,7 @@ func Weather(ctx context.Context, obj events.MessageNewObject, args []string) (*
 }
 
 // Sends user privilegies info
-func Admin(ctx context.Context, obj events.MessageNewObject, args []string) (*Message, error) {
+func Admin(ctx context.Context, obj MessageObject, args []string) (*Message, error) {
 	m := new(Message)
 	m.Builder = params.NewMessagesSendBuilder()
 
@@ -86,6 +85,6 @@ func Admin(ctx context.Context, obj events.MessageNewObject, args []string) (*Me
 	}
 }
 
-func BasicCommand(ctx context.Context, obj events.MessageNewObject, args []string) (*Message, error) {
+func BasicCommand(ctx context.Context, obj MessageObject, args []string) (*Message, error) {
 	return &Message{Builder: params.NewMessagesSendBuilder()}, nil
 }

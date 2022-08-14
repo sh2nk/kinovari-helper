@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"strings"
 
@@ -10,8 +11,8 @@ import (
 
 // ParsedCommand - contains cmd action name with cmd arguments separatly
 type ParsedCommand struct {
-	Action string
-	Args   []string
+	Action string   `json:"action"`
+	Args   []string `json:"args"`
 }
 
 type Forward struct {
@@ -21,8 +22,13 @@ type Forward struct {
 	IsReply                 bool  `json:"is_reply"`
 }
 
+type MessageObject struct {
+	events.MessageNewObject
+	events.MessageEventObject
+}
+
 // New message event handler
-func onMessageNew(ctx context.Context, obj events.MessageNewObject) {
+func OnMessageNew(ctx context.Context, obj events.MessageNewObject) {
 	// Some debug logging action here
 	if Debug {
 		log.Printf("%d: %s", obj.Message.FromID, obj.Message.Text)
@@ -44,7 +50,7 @@ func onMessageNew(ctx context.Context, obj events.MessageNewObject) {
 		f = AddReply(f)
 		f = SendMessage(f)
 
-		if _, err := f(ctx, obj, cmd.Args); err != nil {
+		if _, err := f(ctx, MessageObject{obj, events.MessageEventObject{}}, cmd.Args); err != nil {
 			log.Printf("Error occured during 'weather' command call: %v\n", err)
 		}
 
@@ -54,7 +60,7 @@ func onMessageNew(ctx context.Context, obj events.MessageNewObject) {
 		f = AddReply(f)
 		f = SendMessage(f)
 
-		if _, err := f(ctx, obj, cmd.Args); err != nil {
+		if _, err := f(ctx, MessageObject{obj, events.MessageEventObject{}}, cmd.Args); err != nil {
 			log.Printf("Error occured during 'admin' command call: %v\n", err)
 		}
 
@@ -65,7 +71,7 @@ func onMessageNew(ctx context.Context, obj events.MessageNewObject) {
 			f = AddReplyToSelected(f)
 			f = SendMessage(f)
 
-			if _, err := f(ctx, obj, cmd.Args); err != nil {
+			if _, err := f(ctx, MessageObject{obj, events.MessageEventObject{}}, cmd.Args); err != nil {
 				log.Printf("Error occured during 'thanks' command call: %v\n", err)
 			}
 		}
@@ -77,7 +83,7 @@ func onMessageNew(ctx context.Context, obj events.MessageNewObject) {
 			c = AddReplyToSelected(c)
 			c = SendMessage(c)
 
-			if _, err := c(ctx, obj, cmd.Args); err != nil {
+			if _, err := c(ctx, MessageObject{obj, events.MessageEventObject{}}, cmd.Args); err != nil {
 				log.Printf("Error occured during 'oops' command call: %v\n", err)
 			}
 		}
@@ -85,20 +91,38 @@ func onMessageNew(ctx context.Context, obj events.MessageNewObject) {
 	case "кнопки":
 		kbd := NewKeyboard()
 		kbd.AddRow()
-		kbd.ButtonRows[0].AddButton("Кнопка 1", "positive")
+		kbd.ButtonRows[0].AddButton("Кнопка 1", "positive", "{\"action\": \"forecast\"}")
 		kbd.ButtonRows[0].AddButton("Кнопка 2", "primary")
 		kbd.AddRow()
 		kbd.ButtonRows[1].AddButton("Кнопка 4", "secondary")
 		kbd.ButtonRows[1].AddButton("Кнопка 4", "negative")
 
 		var f Command
-
 		f = AddText(BasicCommand, "Тест кнопок")
 		f = AddKeyboard(f, kbd)
 		f = SendMessage(f)
 
-		if _, err := f(ctx, obj, cmd.Args); err != nil {
+		if _, err := f(ctx, MessageObject{obj, events.MessageEventObject{}}, cmd.Args); err != nil {
 			log.Printf("Error occured during 'buttons' command call: %v\n", err)
+		}
+	}
+}
+
+func OnMessageEvent(ctx context.Context, obj events.MessageEventObject) {
+	var cmd ParsedCommand
+	err := json.Unmarshal(obj.Payload, &cmd)
+	if err != nil {
+		log.Printf("Could not unmarshal event payload json: %v", err)
+	}
+
+	switch cmd.Action {
+	case "forecast":
+		var f Command
+		f = AddText(BasicCommand, "Тест кнопок")
+		f = EditMessage(f, obj.ConversationMessageID)
+
+		if _, err := f(ctx, MessageObject{events.MessageNewObject{}, obj}, cmd.Args); err != nil {
+			log.Printf("Error occured during 'forecast' command call: %v\n", err)
 		}
 	}
 }

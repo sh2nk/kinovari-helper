@@ -3,68 +3,21 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"os"
 
 	"github.com/SevereCloud/vksdk/v2/api/params"
-	"github.com/SevereCloud/vksdk/v2/events"
 )
 
 // Command - basic command function type, used by response builder
-type Command func(context.Context, events.MessageNewObject, []string) (*Message, error)
+type Command func(context.Context, MessageObject, []string) (*Message, error)
 
 type Message struct {
 	Builder *params.MessagesSendBuilder
 }
 
-type Action struct {
-	Type    string `json:"type"`
-	Payload string `json:"payload"`
-	Label   string `json:"label"`
-}
-
-type Button struct {
-	Action Action `json:"action"`
-	Color  string `json:"color"`
-}
-
-type Keyboard struct {
-	OneTime    bool        `json:"one_time"`
-	Inline     bool        `json:"inline"`
-	ButtonRows []ButtonRow `json:"buttons"`
-}
-
-type ButtonRow []Button
-
-func NewKeyboard() *Keyboard {
-	return &Keyboard{OneTime: false, Inline: true}
-}
-
-func (k *Keyboard) AddRow() {
-	k.ButtonRows = append(k.ButtonRows, ButtonRow{})
-}
-
-func (br *ButtonRow) AddButton(label, color string, payload ...string) {
-	var p string
-	if len(payload) > 0 {
-		p = payload[0]
-	} else {
-		p = ""
-	}
-	b := Button{
-		Action: Action{
-			Type:    "callback",
-			Payload: p,
-			Label:   label,
-		},
-		Color: color,
-	}
-	*br = append(*br, b)
-}
-
 // Response messages builder, wraps the command functions
 func SendMessage(fn Command) Command {
-	return func(ctx context.Context, obj events.MessageNewObject, args []string) (*Message, error) {
+	return func(ctx context.Context, obj MessageObject, args []string) (*Message, error) {
 		// Get result from inner function
 		m, err := fn(ctx, obj, args)
 		if err != nil {
@@ -83,8 +36,37 @@ func SendMessage(fn Command) Command {
 	}
 }
 
+// Send response by editing selected message instead of sending new message
+// Should work for both new_message and event_message types
+func EditMessage(fn Command, cmid int) Command {
+	return func(ctx context.Context, obj MessageObject, args []string) (*Message, error) {
+		// Get result from inner function
+		m, err := fn(ctx, obj, args)
+		if err != nil {
+			return nil, err
+		}
+
+		m.Builder.RandomID(int(randomInt32()))
+
+		if obj.Message.PeerID > 0 {
+			m.Builder.PeerID(obj.Message.PeerID)
+		} else {
+			m.Builder.PeerID(obj.PeerID)
+		}
+
+		m.Builder.Params["conversation_message_id"] = cmid
+
+		// Editing message
+		if _, err = VK.MessagesEdit(m.Builder.Params); err != nil {
+			return nil, err
+		}
+
+		return m, nil
+	}
+}
+
 func AddReply(fn Command) Command {
-	return func(ctx context.Context, obj events.MessageNewObject, args []string) (*Message, error) {
+	return func(ctx context.Context, obj MessageObject, args []string) (*Message, error) {
 		// Get result from inner function
 		m, err := fn(ctx, obj, args)
 		if err != nil {
@@ -112,7 +94,7 @@ func AddReply(fn Command) Command {
 }
 
 func AddReplyToSelected(fn Command) Command {
-	return func(ctx context.Context, obj events.MessageNewObject, args []string) (*Message, error) {
+	return func(ctx context.Context, obj MessageObject, args []string) (*Message, error) {
 		// Get result from inner function
 		m, err := fn(ctx, obj, args)
 		if err != nil {
@@ -140,7 +122,7 @@ func AddReplyToSelected(fn Command) Command {
 }
 
 func AddPhoto(fn Command, path string) Command {
-	return func(ctx context.Context, obj events.MessageNewObject, args []string) (*Message, error) {
+	return func(ctx context.Context, obj MessageObject, args []string) (*Message, error) {
 		// Get result from inner function
 		m, err := fn(ctx, obj, args)
 		if err != nil {
@@ -167,7 +149,7 @@ func AddPhoto(fn Command, path string) Command {
 }
 
 func AddKeyboard(fn Command, kbd *Keyboard) Command {
-	return func(ctx context.Context, obj events.MessageNewObject, args []string) (*Message, error) {
+	return func(ctx context.Context, obj MessageObject, args []string) (*Message, error) {
 		// Get result from inner function
 		m, err := fn(ctx, obj, args)
 		if err != nil {
@@ -179,7 +161,6 @@ func AddKeyboard(fn Command, kbd *Keyboard) Command {
 			return nil, err
 		}
 
-		log.Println(string(k))
 		m.Builder.Keyboard(string(k))
 
 		return m, nil
@@ -187,7 +168,7 @@ func AddKeyboard(fn Command, kbd *Keyboard) Command {
 }
 
 func AddText(fn Command, t string) Command {
-	return func(ctx context.Context, obj events.MessageNewObject, args []string) (*Message, error) {
+	return func(ctx context.Context, obj MessageObject, args []string) (*Message, error) {
 		// Get result from inner function
 		m, err := fn(ctx, obj, args)
 		if err != nil {
