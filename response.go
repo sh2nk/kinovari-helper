@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"os"
 
 	"github.com/SevereCloud/vksdk/v2/api/params"
@@ -28,9 +29,37 @@ type Button struct {
 }
 
 type Keyboard struct {
-	OneTime bool       `json:"one_time"`
-	Inline  bool       `json:"inline"`
-	Buttons [][]Button `json:"buttons"`
+	OneTime    bool        `json:"one_time"`
+	Inline     bool        `json:"inline"`
+	ButtonRows []ButtonRow `json:"buttons"`
+}
+
+type ButtonRow []Button
+
+func NewKeyboard() *Keyboard {
+	return &Keyboard{OneTime: false, Inline: true}
+}
+
+func (k *Keyboard) AddRow() {
+	k.ButtonRows = append(k.ButtonRows, ButtonRow{})
+}
+
+func (br *ButtonRow) AddButton(label, color string, payload ...string) {
+	var p string
+	if len(payload) > 0 {
+		p = payload[0]
+	} else {
+		p = ""
+	}
+	b := Button{
+		Action: Action{
+			Type:    "callback",
+			Payload: p,
+			Label:   label,
+		},
+		Color: color,
+	}
+	*br = append(*br, b)
 }
 
 // Response messages builder, wraps the command functions
@@ -150,6 +179,7 @@ func AddKeyboard(fn Command, kbd *Keyboard) Command {
 			return nil, err
 		}
 
+		log.Println(string(k))
 		m.Builder.Keyboard(string(k))
 
 		return m, nil
