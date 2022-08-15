@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"net/http"
 	"net/url"
 )
 
@@ -114,7 +115,7 @@ type WeatherForecast struct {
 	City    City          `json:"city"`
 }
 
-type Request struct {
+type WeatherRequest struct {
 	City  string
 	AppID string
 	Mode  string
@@ -124,7 +125,7 @@ type Request struct {
 }
 
 // Encode request form data
-func (w Request) create() string {
+func (w WeatherRequest) create() string {
 	form := url.Values{}
 	form.Add("q", w.City)
 	form.Add("appid", w.AppID)
@@ -136,12 +137,12 @@ func (w Request) create() string {
 }
 
 // Create request URL using weather endpoint
-func (w Request) MakeWeather() string {
+func (w WeatherRequest) MakeWeather() string {
 	return WeatherEndpoint + w.create()
 }
 
 // Create request URL using forecast endpoint
-func (w Request) MakeForecast() string {
+func (w WeatherRequest) MakeForecast() string {
 	return ForecastEndpoint + w.create()
 }
 
@@ -209,4 +210,54 @@ func (w WeatherCurrentData) GetWindDirection() string {
 	default:
 		return ""
 	}
+}
+
+func GetCurrentWeather(city string) (*WeatherCurrentData, error) {
+	// Create weather API request
+	req := WeatherRequest{
+		City:  city,
+		AppID: WeatherToken,
+		Units: "metric",
+		Lang:  "ru",
+	}
+
+	// Sending request
+	resp, err := http.Get(req.MakeWeather())
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Parsing responce data
+	var data WeatherCurrentData
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return &data, nil
+}
+
+func GetForecast(city string) (*WeatherForecast, error) {
+	// Create weather API request
+	req := WeatherRequest{
+		City:  city,
+		AppID: WeatherToken,
+		Units: "metric",
+		Lang:  "ru",
+	}
+
+	// Sending request
+	resp, err := http.Get(req.MakeForecast())
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Parsing responce data
+	var data WeatherForecast
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return &data, nil
 }
