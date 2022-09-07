@@ -9,6 +9,12 @@ import (
 	"github.com/SevereCloud/vksdk/v2/events"
 )
 
+type CommandString struct {
+	Weather string `yaml:"weather"`
+	Thanks  string `yaml:"thanks"`
+	Oops    string `yaml:"oops"`
+}
+
 // ParsedCommand - contains cmd action name with cmd arguments separatly
 type ParsedCommand struct {
 	Action string   `json:"action"`
@@ -43,8 +49,8 @@ func OnMessageNew(ctx context.Context, obj events.MessageNewObject) {
 
 	// Do some actions if right prefix is found
 	// TODO: export command keystrings to separate place
-	switch cmd.Action {
-	case "погода":
+	switch {
+	case strings.Contains(CommandStrings.Weather, cmd.Action):
 		var f Command
 		f = Weather
 		f = AddReply(f)
@@ -54,7 +60,7 @@ func OnMessageNew(ctx context.Context, obj events.MessageNewObject) {
 			log.Printf("Error occured during 'weather' command call: %v\n", err)
 		}
 
-	case "админ":
+	case strings.Contains("админ", cmd.Action):
 		var f Command
 		f = Admin
 		f = AddReply(f)
@@ -64,7 +70,7 @@ func OnMessageNew(ctx context.Context, obj events.MessageNewObject) {
 			log.Printf("Error occured during 'admin' command call: %v\n", err)
 		}
 
-	case "спасибо", "спс", "благодарю", "уважение", "респект", "хорош", "харош", "красава", "лучший", "лучшая", "хороша", "+":
+	case strings.Contains(CommandStrings.Thanks, cmd.Action):
 		if obj.Message.ReplyMessage != nil {
 			var f Command
 			f = AddPhoto(BasicCommand, "img/thanks.jpg")
@@ -76,7 +82,7 @@ func OnMessageNew(ctx context.Context, obj events.MessageNewObject) {
 			}
 		}
 
-	case "фу", "гавно", "говно", "дерьмо", "кал", "удали", "бан", "плох", "паршив", "паршива", "подводишь", "расстраиваешь", "опозорился", "опозорилась", "опростоволосился", "опростоволосилась":
+	case strings.Contains(CommandStrings.Oops, cmd.Action):
 		if obj.Message.ReplyMessage != nil {
 			var c Command
 			c = AddPhoto(BasicCommand, "img/oops.jpg")
@@ -88,7 +94,7 @@ func OnMessageNew(ctx context.Context, obj events.MessageNewObject) {
 			}
 		}
 
-	case "кнопки":
+	case strings.Contains("кнопки", cmd.Action):
 		kbd := NewKeyboard()
 		kbd.AddRow()
 		kbd.ButtonRows[0].AddButton("Кнопка 1", "positive", "{\"action\": \"forecast\"}")
