@@ -34,7 +34,7 @@ func Weather(ctx context.Context, obj MessageObject, args []string) (*Message, e
 			return m, nil
 		default:
 			// Parse message template
-			t, err := template.ParseFiles("templates/weatherCurrent.txt")
+			t, err := template.ParseFiles("templates/weatherCurrent.gtpl")
 			if err != nil {
 				return nil, err
 			}
@@ -77,7 +77,7 @@ func Forecast(ctx context.Context, obj MessageObject, args []string) (*Message, 
 			return m, nil
 		default:
 			// Parse message template
-			t, err := template.ParseFiles("templates/weatherForecast.txt")
+			t, err := template.ParseFiles("templates/weatherForecast.gtpl")
 			if err != nil {
 				return nil, err
 			}

@@ -27,6 +27,12 @@ func (k *Keyboard) AddRow() {
 	k.ButtonRows = append(k.ButtonRows, ButtonRow{})
 }
 
+func (k *Keyboard) AddRows(count int) {
+	for i := 0; i < count; i++ {
+		k.AddRow()
+	}
+}
+
 func (br *ButtonRow) AddButton(label, color string, payload ...string) {
 	var p string
 	if len(payload) > 0 {
