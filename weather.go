@@ -192,21 +192,21 @@ func (w WeatherCurrentData) GetPressure() float32 {
 func (w WeatherCurrentData) GetWindDirection() string {
 	switch w.Wind.Direction / 45 {
 	case 0:
-		return "⬆️"
-	case 1:
-		return "↗️"
-	case 2:
-		return "➡️"
-	case 3:
-		return "↘️"
-	case 4:
 		return "⬇️"
-	case 5:
+	case 1:
 		return "↙️"
-	case 6:
+	case 2:
 		return "⬅️"
-	case 7:
+	case 3:
 		return "↖️"
+	case 4:
+		return "⬆️"
+	case 5:
+		return "↗️"
+	case 6:
+		return "➡️"
+	case 7:
+		return "↘️"
 	default:
 		return ""
 	}
